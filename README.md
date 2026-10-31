@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <b>Conker: Live &amp; Reloaded (Xbox, 2005), running natively on Linux.</b><br>
+  <b>Conker: Live &amp; Reloaded (Xbox, 2005), running natively on Linux and Windows.</b><br>
   A static recompilation with a launcher that builds the game from your own disc, enhanced graphics, and online play
   with room codes.
 </p>
@@ -20,7 +20,7 @@
   <a href="#credits">Credits</a>
 </p>
 
-<p align="center"><b>Version 1.0</b> · Linux x86_64 (AppImage) · GPL-3.0</p>
+<p align="center"><b>Version 1.0</b> · Linux x86_64 (AppImage) · Windows 10/11 x64 (portable zip) · GPL-3.0</p>
 
 > [!IMPORTANT]
 > This is an unofficial, non-commercial fan project. It is not affiliated with or endorsed by Rare, Microsoft or Xbox
@@ -40,7 +40,8 @@ on your PC, with a modern Vulkan renderer. There's no emulator.
 - **Every setting lives in the launcher,** not in menus inside the game: graphics, enhancements, audio, controls,
   online and mods.
 - **It adds online play with room codes,** so friends can join your match over the internet.
-- **Everything stays in one folder**, next to the AppImage. Nothing goes to hidden folders or system locations.
+- **Everything stays in one folder**, next to the AppImage or the launcher's `.exe`. Nothing goes to hidden folders,
+  `%APPDATA%`, the registry or system locations.
 
 ## Features
 
@@ -137,25 +138,34 @@ Everyone in a match needs **the same version** of Conker: Recomped & Reloaded.
 **You need:**
 - **Your own disc image:** *Conker: Live & Reloaded* for the original Xbox, **USA** release, as an `.iso`. Its
   `default.xbe` has SHA-1 `2232a1b3874d67b4bb4cf53a940420d2dab59535`, and the launcher checks it for you.
-- **Linux x86_64 with glibc 2.43 or newer** for this build: Fedora 44, current Arch, CachyOS and Bazzite, for example.
-  Builds for older distributions will come from GitHub Actions.
-- **A GPU with Vulkan 1.3**, and FUSE 3 (`fusermount3`), which is standard on current desktops.
-- **About 8 GB free** while setting up, and about 5 GB afterwards.
+- **Linux:** x86_64 with **glibc 2.34 or newer** (Debian 12, Ubuntu 22.04, Fedora 35, current Arch, Bazzite and
+  newer), and FUSE 3 (`fusermount3`), which is standard on current desktops.
+- **Windows:** Windows 10 or 11, 64-bit.
+- **A GPU with Vulkan 1.3**, and about 8 GB free while setting up (about 5 GB afterwards).
 - **A controller is recommended** for multiplayer menus (see [Controls](#controls)).
 
-**Steps:**
-1. Download `ConkerRecompedReloaded-x86_64.AppImage` from
-   [Releases](https://github.com/Mabec-games/Conker-Recomped-and-Reloaded/releases) and put it in a folder of its own,
-   for example `~/Games/ConkerRecompedReloaded/`. Everything the game creates will live next to it.
+Download from [Releases](https://github.com/Mabec-games/Conker-Recomped-and-Reloaded/releases).
+
+**Linux**
+1. Put `ConkerRecompedReloaded-x86_64.AppImage` in a folder of its own, for example `~/Games/ConkerRecompedReloaded/`.
+   Everything the game creates will live next to it.
 2. Make it executable (`chmod +x ConkerRecompedReloaded-x86_64.AppImage`, or tick *Allow executing* in its
    properties), then run it.
+
+**Windows**
+1. Extract `ConkerRecompedReloaded-windows-x64.zip` to a folder of your own, for example
+   `C:\Games\ConkerRecompedReloaded\`, not *Program Files*, since the launcher writes next to itself.
+2. Run `ConkerLauncher.exe`. The launcher isn't code-signed, so Windows SmartScreen may warn the first time: choose
+   **More info → Run anyway**.
+
+**Then, on both:**
 3. Choose your disc image and press **Install**. The launcher checks the disc, extracts it and builds the game, which
-   takes a few minutes. Nothing is downloaded.
+   takes a few minutes. Nothing is downloaded: the compiler comes with the launcher.
 4. Press **PLAY**. The disc image is no longer needed.
 
 **The folder afterwards:**
 ```
-ConkerRecompedReloaded-x86_64.AppImage
+ConkerRecompedReloaded-x86_64.AppImage   (on Windows: ConkerLauncher.exe and its files)
 launcher.ini          the launcher's preferences
 game/                 the built game, settings.toml, saves (hdd/), logs/, shader caches, assets/ (your disc's files)
 mods/                 the decensor mod, when turned on
@@ -185,8 +195,10 @@ Rebind any of them in **Controls**, separately for single player and multiplayer
 - **Keyboard in multiplayer menus:** some screens (class or team selection) don't respond to mouse clicks, and the
   on-screen hints show controller buttons. Use Space for A and E for B, or a controller.
 - **3+ online players:** untested so far (see [Play online](#play-online)).
-- **This AppImage needs glibc 2.43+.** The game itself runs on anything from about 2020 on. Wider support is next.
-- **Windows:** the game already builds for Windows, and a Windows launcher is the next step.
+- **Windows is new:** the launcher, the bundled compiler and the build kit pass automated tests on Windows, but full
+  installs have been played on Linux so far. Reports from Windows players are very welcome.
+- **When hosting on Windows:** Windows Defender Firewall asks whether the game may use the network the first time.
+  Allow it on private networks, or friends can't connect.
 - **Supported disc:** the USA disc image only.
 
 ## Building from source
@@ -201,6 +213,12 @@ cd Conker-Recomped-and-Reloaded
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
 tools/make-appimage.sh      # dist/ConkerRecompedReloaded-x86_64.AppImage, with the compiler and licences inside
 ```
+
+On Windows (Visual Studio 2022, Qt 6 for MSVC, vcpkg): `tools\make-windows.ps1 -Kit <folder with setup-windows.exe>`
+makes `dist\ConkerRecompedReloaded-windows-x64.zip`. The release builds come from GitHub Actions
+(`.github/workflows/build.yml`): the AppImage is built on Ubuntu 22.04, the zip on Windows, and both are smoke-tested
+on Debian 12, Ubuntu 22.04 and 24.04, Fedora 44, Arch and Windows before they're attached to a release. The build
+kits they include come from the `kit-*` releases of the game fork, since making a kit needs the disc.
 
 Tests: `tests/online_tool codes` (room codes), and `tests/xnet_wire_test.cpp` in the submodule (the online packet rules).
 
