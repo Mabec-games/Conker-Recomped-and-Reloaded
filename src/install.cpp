@@ -1,5 +1,6 @@
 #include "install.h"
 
+#include <algorithm>
 #include <QCoreApplication>
 #include <QDirIterator>
 
@@ -35,7 +36,12 @@ QString Shipped(const QString& name) {
 
 QString BundledCompiler() {
     const QString dir = Shipped("zig");
-    return !dir.isEmpty() && QFileInfo(dir + "/zig").isExecutable() ? dir : QString();
+#ifdef Q_OS_WIN
+    const QString zig = dir + "/zig.exe";
+#else
+    const QString zig = dir + "/zig";
+#endif
+    return !dir.isEmpty() && QFileInfo(zig).isExecutable() ? dir : QString();
 }
 
 QString LicensesDir() { return Shipped("licenses"); }

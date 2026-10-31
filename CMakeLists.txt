@@ -47,6 +47,9 @@ qt_add_executable(ConkerLauncher WIN32
 target_link_libraries(ConkerLauncher PRIVATE Qt6::Widgets Qt6::Network LibArchive::LibArchive tomlplusplus::tomlplusplus
     libminiupnpc-static)
 
+if(WIN32)
+    target_compile_definitions(ConkerLauncher PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
+endif()
 if(MSVC)
     target_compile_options(ConkerLauncher PRIVATE /W4 /utf-8)
 else()

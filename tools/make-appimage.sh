@@ -8,8 +8,10 @@
 #
 #   tools/make-appimage.sh [KIT_DIR]
 #   KIT_DIR: live-and-recompiled's out/release/LiveAndRecompiled (default: ../live-and-recompiled/...)
-# Needs: linuxdeploy (with its appimage plugin) on PATH, curl, tar, and packaging/tools/linuxdeploy-plugin-qt-x86_64.AppImage
-# (fetched if missing). Output: dist/ConkerRecompedReloaded-x86_64.AppImage
+# Needs: curl, tar, CMake, Ninja, Qt 6 (qmake6 or qmake on PATH, or REAL_QMAKE) and libarchive. linuxdeploy and its Qt
+# plugin are fetched into packaging/tools when missing (LINUXDEPLOY names another). Works on Arch (pacman) and
+# Debian/Ubuntu (dpkg) hosts; the AppImage needs the glibc of the host it was built on, or newer.
+# Output: dist/ConkerRecompedReloaded-x86_64.AppImage
 set -euo pipefail
 here="$(cd "$(dirname "$0")/.." && pwd)"
 kit="${1:-}"
@@ -29,7 +31,16 @@ ZIG_URL=https://ziglang.org/download/0.16.0/$ZIG_ARCHIVE
 ZIG_SHA256=70e49664a74374b48b51e6f3fdfbf437f6395d42509050588bd49abe52ba3d00
 
 [ -x "$kit/setup-linux" ] || { echo "no setup-linux in $kit: run tools/package.sh in live-and-recompiled" >&2; exit 1; }
-command -v linuxdeploy >/dev/null || { echo "linuxdeploy is not on PATH" >&2; exit 1; }
+mkdir -p "$pack/tools"
+LD="${LINUXDEPLOY:-$(command -v linuxdeploy || true)}"
+if [ -z "$LD" ]; then
+    LD="$pack/tools/linuxdeploy-x86_64.AppImage"
+    [ -x "$LD" ] || { curl -fL --retry 3 -o "$LD" \
+        https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage && chmod +x "$LD"; }
+fi
+real_qmake="${REAL_QMAKE:-$(command -v qmake6 || command -v qmake || true)}"
+[ -n "$real_qmake" ] || { echo "no qmake6 or qmake on PATH (Qt 6)" >&2; exit 1; }
+qt_plugins="$("$real_qmake" -query QT_INSTALL_PLUGINS)"
 
 echo "== the launcher"
 cmake -S "$here" -B "$here/build" -G Ninja -DCMAKE_BUILD_TYPE=Release >/dev/null
@@ -61,7 +72,6 @@ cp "$here/resources/icon.png" "$pack/conker-recomped-and-reloaded.png"
 
 # linuxdeploy's bundled strip predates newer ELF sections (.relr.dyn): leave the libraries as the system built them
 export NO_STRIP=1
-export EXTRA_PLATFORM_PLUGINS="libqwayland.so;libqoffscreen.so"  # offscreen: scripted --install without a display
 export PATH="$pack/tools:$PATH"
 [ -x "$pack/tools/linuxdeploy-plugin-qt-x86_64.AppImage" ] || {
     mkdir -p "$pack/tools"
@@ -78,8 +88,9 @@ ln -sf linuxdeploy-plugin-qt-x86_64.AppImage "$pack/tools/linuxdeploy-plugin-qt"
 qtp="$pack/qt-plugins"
 rm -rf "$qtp" && mkdir -p "$qtp"
 pick() { mkdir -p "$qtp/$1"; shift_dir="$1"; shift; for f in "$@"; do
-    [ -e "/usr/lib/qt6/plugins/$shift_dir/$f" ] && cp "/usr/lib/qt6/plugins/$shift_dir/$f" "$qtp/$shift_dir/"; done; }
-pick platforms libqxcb.so libqwayland.so libqoffscreen.so
+    [ -e "$qt_plugins/$shift_dir/$f" ] && cp "$qt_plugins/$shift_dir/$f" "$qtp/$shift_dir/"; done; return 0; }
+# libqwayland (Qt 6.10 on) or libqwayland-generic and -egl (before); offscreen for scripted --install without a display
+pick platforms libqxcb.so libqwayland.so libqwayland-generic.so libqwayland-egl.so libqoffscreen.so
 pick imageformats libqjpeg.so libqgif.so libqico.so libqsvg.so
 pick iconengines libqsvgicon.so
 pick tls libqopensslbackend.so libqcertonlybackend.so
@@ -87,10 +98,12 @@ pick platformthemes libqxdgdesktopportal.so
 pick platforminputcontexts libcomposeplatforminputcontextplugin.so
 pick xcbglintegrations libqxcb-egl-integration.so libqxcb-glx-integration.so
 for dir in wayland-shell-integration wayland-decoration-client wayland-graphics-integration-client; do
-    mkdir -p "$qtp/$dir" && cp /usr/lib/qt6/plugins/$dir/*.so "$qtp/$dir/"
+    [ -d "$qt_plugins/$dir" ] && mkdir -p "$qtp/$dir" && cp "$qt_plugins/$dir"/*.so "$qtp/$dir/"
 done
+# every platform plugin picked besides xcb, which linuxdeploy-plugin-qt deploys on its own
+EXTRA_PLATFORM_PLUGINS="$(cd "$qtp/platforms" && ls | grep -v '^libqxcb.so$' | paste -sd';')"
+export EXTRA_PLATFORM_PLUGINS
 mkdir -p "$pack/qmake-bin"
-real_qmake="$(command -v qmake6 || command -v qmake)"
 cat > "$pack/qmake-bin/qmake" <<EOF2
 #!/bin/sh
 # qmake as linuxdeploy-plugin-qt asks it, with the plugin folder replaced by the curated one
@@ -102,7 +115,7 @@ chmod +x "$pack/qmake-bin/qmake"
 export QMAKE="$pack/qmake-bin/qmake"
 export EXTRA_QT_MODULES="waylandclient"
 
-linuxdeploy --appdir "$appdir" \
+"$LD" --appdir "$appdir" \
     -e "$appdir/usr/bin/ConkerLauncher" \
     -d "$pack/conker-recomped-and-reloaded.desktop" \
     -i "$pack/conker-recomped-and-reloaded.png" \
@@ -128,40 +141,67 @@ cp "$appdir/usr/share/conker-launcher/zig/LICENSE" "$lic/zig/LICENSE (MIT)"
 cp "$here/build/_deps/tomlplusplus-src/LICENSE" "$lic/tomlplusplus/LICENSE (MIT)"
 mkdir -p "$lic/miniupnpc"
 cp "$here/build/_deps/miniupnpc-src/miniupnpc/LICENSE" "$lic/miniupnpc/LICENSE (BSD-3-Clause)"
-# every system library in the AppImage: its package's licence texts, and a list with name, version, licence and URL
+# every library in the AppImage: its package's licence texts, and a list with name, version, licence and URL. System
+# libraries are looked up with pacman (Arch) or dpkg (Debian, Ubuntu); Qt from the Qt installer is named as such.
 {
-    echo "System libraries carried in this AppImage, with the package they came from (built on $(. /etc/os-release; echo "$PRETTY_NAME"))."
+    echo "Libraries carried in this AppImage, with the package they came from (built on $(. /etc/os-release; echo "$PRETTY_NAME"))."
     echo "Their licence texts are in the folders beside this file."
     echo
 } > "$lic/SYSTEM-LIBRARIES.txt"
+qt_libs="$("$real_qmake" -query QT_INSTALL_LIBS)"
+: > "$pack/pkgs.txt"
+qt_bundled=0
 for so in $(find "$appdir/usr/lib" "$appdir/usr/plugins" -name '*.so*' -type f | sort); do
     name=$(basename "$so")
-    src=$( (ls /usr/lib/"$name" /usr/lib/qt6/plugins/*/"$name" 2>/dev/null || true) | head -1)
+    src=""
+    for c in "$qt_libs/$name" "$qt_plugins"/*/"$name" /usr/lib/"$name" /usr/lib/x86_64-linux-gnu/"$name" /lib/x86_64-linux-gnu/"$name"; do
+        [ -e "$c" ] && { src="$c"; break; }
+    done
     [ -n "$src" ] || continue
-    pkg=$(pacman -Qqo "$src" 2>/dev/null || true)
-    [ -n "$pkg" ] || continue
-    echo "$pkg" >> "$pack/pkgs.txt"
-done
-sort -u "$pack/pkgs.txt" | while read -r pkg; do
-    info=$(LC_ALL=C pacman -Qi "$pkg")
-    ver=$(sed -n 's/^Version *: //p' <<<"$info")
-    licences=$(sed -n 's/^Licenses *: //p' <<<"$info")
-    url=$(sed -n 's/^URL *: //p' <<<"$info")
-    printf '%-28s %-24s %-40s %s\n' "$pkg" "$ver" "$licences" "$url" >> "$lic/SYSTEM-LIBRARIES.txt"
-    if [ -d "/usr/share/licenses/$pkg" ]; then
-        mkdir -p "$lic/$pkg"
-        cp -rL "/usr/share/licenses/$pkg/." "$lic/$pkg/" 2>/dev/null || true
+    pkg=""
+    if command -v pacman >/dev/null; then pkg=$(pacman -Qqo "$src" 2>/dev/null || true)
+    elif command -v dpkg >/dev/null; then pkg=$(dpkg -S "$(readlink -f "$src")" 2>/dev/null | head -1 | cut -d: -f1 || true)
+    fi
+    if [ -n "$pkg" ]; then echo "$pkg" >> "$pack/pkgs.txt"
+    elif case "$src" in "$qt_libs"/*|"$qt_plugins"/*) true;; *) false;; esac; then qt_bundled=1
     fi
 done
+if [ "$qt_bundled" = 1 ]; then
+    printf '%-28s %-24s %-40s %s\n' "Qt (qt.io installer)" "$("$real_qmake" -query QT_VERSION)" "LGPL-3.0-only" \
+        "https://www.qt.io (source: https://download.qt.io)" >> "$lic/SYSTEM-LIBRARIES.txt"
+fi
+sort -u "$pack/pkgs.txt" | while read -r pkg; do
+    if command -v pacman >/dev/null; then
+        info=$(LC_ALL=C pacman -Qi "$pkg")
+        ver=$(sed -n 's/^Version *: //p' <<<"$info")
+        licences=$(sed -n 's/^Licenses *: //p' <<<"$info")
+        url=$(sed -n 's/^URL *: //p' <<<"$info")
+        src_dir="/usr/share/licenses/$pkg"
+    else
+        ver=$(dpkg-query -W -f='${Version}' "$pkg" 2>/dev/null || true)
+        licences="see its copyright file"
+        url=$(dpkg-query -W -f='${Homepage}' "$pkg" 2>/dev/null || true)
+        src_dir="/usr/share/doc/$pkg"
+    fi
+    printf '%-28s %-24s %-40s %s\n' "$pkg" "$ver" "$licences" "$url" >> "$lic/SYSTEM-LIBRARIES.txt"
+    mkdir -p "$lic/$pkg"
+    if [ -f "$src_dir/copyright" ]; then cp -L "$src_dir/copyright" "$lic/$pkg/"
+    elif [ -d "$src_dir" ]; then cp -rL "$src_dir/." "$lic/$pkg/" 2>/dev/null || true
+    fi
+    rmdir "$lic/$pkg" 2>/dev/null || true
+done
 rm -f "$pack/pkgs.txt"
-# licences only named in the package metadata (the common ones live in /usr/share/licenses/spdx)
+# the common licence texts the list names (Arch keeps them in /usr/share/licenses/spdx, Debian in common-licenses)
 mkdir -p "$lic/common"
 for spdx in LGPL-3.0-only GPL-3.0-only Apache-2.0 MIT BSD-3-Clause; do
     [ -f "/usr/share/licenses/spdx/$spdx.txt" ] && cp "/usr/share/licenses/spdx/$spdx.txt" "$lic/common/"
+done
+for f in LGPL-3 GPL-3 Apache-2.0; do
+    [ -f "/usr/share/common-licenses/$f" ] && cp "/usr/share/common-licenses/$f" "$lic/common/$f.txt"
 done
 
 echo "== AppImage"
 mkdir -p "$out"
 rm -f "$out"/ConkerRecompedReloaded-x86_64.AppImage
-(cd "$out" && OUTPUT=ConkerRecompedReloaded-x86_64.AppImage linuxdeploy --appdir "$appdir" --output appimage)
+(cd "$out" && OUTPUT=ConkerRecompedReloaded-x86_64.AppImage "$LD" --appdir "$appdir" --output appimage)
 ls -la "$out"/ConkerRecompedReloaded-x86_64.AppImage

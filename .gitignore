@@ -9,3 +9,4 @@ compile_commands.json
 packaging/qt-plugins/
 packaging/qmake-bin/
 packaging/appimage.log
+build-windows/

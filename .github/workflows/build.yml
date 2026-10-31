@@ -1,0 +1,203 @@
+# Builds the launcher for Linux (an AppImage built on Ubuntu 22.04, so it runs on glibc 2.35 and newer) and Windows
+# (a portable zip), smoke-tests both, and on a version tag (or when asked) attaches them to the release.
+#
+# The game's build kit (setup-linux, setup-windows.exe) comes from a release of Mabec-games/live-and-recompiled:
+# making a kit needs the game's default.xbe, so kits are made on a machine with the disc (tools/package.sh) and
+# published there. The kits hold none of the game, and nor does anything built here. The smoke tests start the
+# launcher and its bundled tools; building and playing the game needs a disc, so that is tested by hand.
+name: Build and smoke test
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      upload_to:
+        description: 'Release tag to attach the builds to (empty: build and test only)'
+        required: false
+        default: ''
+
+env:
+  KIT_REPO: Mabec-games/live-and-recompiled
+  KIT_TAG: kit-1.0
+  QT_VERSION: '6.8.3'
+
+jobs:
+  linux:
+    name: Linux AppImage
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libarchive-dev libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev \
+            libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libxcb-image0 \
+            libxcb-render-util0 libfuse2 file
+
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          host: linux
+          target: desktop
+          arch: linux_gcc_64
+          cache: true
+
+      - name: Build kit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "$KIT_TAG" -R "$KIT_REPO" -D kit -p setup-linux -p LICENSE -p THIRD_PARTY.txt -p SHA256SUMS
+          cd kit && grep ' setup-linux$' SHA256SUMS | sha256sum -c && chmod +x setup-linux
+
+      - name: AppImage
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: '1'   # no FUSE on the runner, for linuxdeploy's own AppImages
+        run: tools/make-appimage.sh "$PWD/kit"
+
+      - name: Requirements
+        run: |
+          cd dist && ./ConkerRecompedReloaded-x86_64.AppImage --appimage-extract >/dev/null
+          glibc=$(find squashfs-root -type f \( -name '*.so*' -o -path '*/usr/bin/*' \) -exec objdump -T {} \; 2>/dev/null \
+            | grep -oE 'GLIBC_[0-9.]+' | sort -uV | tail -1)
+          echo "The AppImage needs $glibc or newer." | tee -a "$GITHUB_STEP_SUMMARY"
+          rm -rf squashfs-root
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-appimage
+          path: dist/ConkerRecompedReloaded-x86_64.AppImage
+          if-no-files-found: error
+
+  smoke-linux:
+    name: Smoke test (${{ matrix.image }})
+    needs: linux
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ['debian:12', 'ubuntu:22.04', 'ubuntu:24.04', 'fedora:44', 'archlinux:latest']
+    container: ${{ matrix.image }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-appimage
+
+      - name: Desktop libraries (what a desktop has; the AppImage leaves them to the system)
+        run: |
+          if command -v apt-get >/dev/null; then
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update && apt-get install -y libgl1 libegl1 libfontconfig1 libfreetype6 libx11-6 libx11-xcb1 \
+              libxcb1 libxkbcommon0 libdbus-1-3 libglib2.0-0 libwayland-client0 libwayland-cursor0 libwayland-egl1 \
+              libstdc++6 ca-certificates
+          elif command -v dnf >/dev/null; then
+            dnf install -y mesa-libGL mesa-libEGL fontconfig freetype libX11 libX11-xcb libxcb libxkbcommon dbus-libs \
+              glib2 libwayland-client libwayland-cursor libwayland-egl libstdc++ findutils
+          elif command -v pacman >/dev/null; then
+            pacman -Syu --noconfirm libglvnd mesa fontconfig freetype2 libx11 libxcb libxkbcommon dbus glib2 wayland
+          fi
+
+      - name: Start the launcher and its tools
+        run: |
+          chmod +x ConkerRecompedReloaded-x86_64.AppImage
+          ./ConkerRecompedReloaded-x86_64.AppImage --appimage-extract >/dev/null   # no FUSE in a container
+          export APPIMAGE="$PWD/ConkerRecompedReloaded-x86_64.AppImage" QT_QPA_PLATFORM=offscreen QT_FORCE_STDERR_LOGGING=1
+          timeout 120 squashfs-root/AppRun --screenshot "$PWD/launcher.png"
+          test -s launcher.png && echo "launcher started and drew its window"
+          squashfs-root/usr/share/conker-launcher/zig/zig version
+          squashfs-root/usr/share/conker-launcher/setup-linux --help 2>&1 | grep -q usage && echo "build kit runs"
+          test -s squashfs-root/usr/share/doc/conker-launcher/licenses/CREDITS.md && echo "licences present"
+          echo "image=$(echo '${{ matrix.image }}' | tr ':/' '--')" >> "$GITHUB_ENV"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenshot-${{ env.image }}
+          path: launcher.png
+
+  windows:
+    name: Windows zip
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          host: windows
+          target: desktop
+          arch: win64_msvc2022_64
+          cache: true
+
+      - name: Build kit
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download $env:KIT_TAG -R $env:KIT_REPO -D kit -p setup-windows.exe -p LICENSE -p THIRD_PARTY.txt -p SHA256SUMS
+          $want = ((Get-Content kit\SHA256SUMS | Where-Object { $_ -match ' setup-windows\.exe$' }) -split ' ')[0]
+          $have = (Get-FileHash kit\setup-windows.exe -Algorithm SHA256).Hash.ToLower()
+          if ($want -ne $have) { throw "setup-windows.exe checksum differs" }
+
+      - name: Build and package
+        shell: pwsh
+        run: tools\make-windows.ps1 -Kit "$PWD\kit"
+
+      - name: Start the launcher and its tools
+        shell: pwsh
+        run: |
+          $dir = "dist\ConkerRecompedReloaded-windows-x64"
+          $env:QT_QPA_PLATFORM = 'offscreen'
+          $p = Start-Process -FilePath "$dir\ConkerLauncher.exe" -ArgumentList '--screenshot', "$PWD\launcher.png" -PassThru
+          if (-not $p.WaitForExit(120000)) { $p.Kill(); throw 'the launcher did not finish' }
+          if (-not (Test-Path launcher.png)) { throw 'no screenshot: the launcher did not start' }
+          "launcher started and drew its window"
+          & "$dir\zig\zig.exe" version
+          if ($LASTEXITCODE) { throw 'zig.exe failed' }
+          $usage = & "$dir\setup-windows.exe" --help 2>&1 | Out-String
+          if ($usage -notmatch 'usage') { throw "the build kit did not run: $usage" }
+          "build kit runs"
+          if (-not (Test-Path "$dir\licenses\CREDITS.md")) { throw 'licences missing' }
+          "licences present"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-zip
+          path: dist/ConkerRecompedReloaded-windows-x64.zip
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenshot-windows
+          path: launcher.png
+
+  release:
+    name: Attach to the release
+    needs: [smoke-linux, windows]
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.upload_to != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-appimage
+          path: out
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-zip
+          path: out
+
+      - name: Upload
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.upload_to != '' && inputs.upload_to || github.ref_name }}
+        run: |
+          cd out
+          sha256sum ConkerRecompedReloaded-x86_64.AppImage ConkerRecompedReloaded-windows-x64.zip > SHA256SUMS
+          gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 || gh release create "$TAG" -R "$GITHUB_REPOSITORY" --generate-notes
+          gh release upload "$TAG" -R "$GITHUB_REPOSITORY" --clobber \
+            ConkerRecompedReloaded-x86_64.AppImage ConkerRecompedReloaded-windows-x64.zip SHA256SUMS

@@ -1,5 +1,6 @@
 #include "setuppage.h"
 
+#include <algorithm>
 #include <QCryptographicHash>
 #include <QDir>
 #include <QFile>

@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 
+#include <algorithm>
 #include <QApplication>
 #include <QButtonGroup>
 #include <QCheckBox>
