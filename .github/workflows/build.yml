@@ -155,7 +155,8 @@ jobs:
         shell: pwsh
         run: |
           $dir = "dist\ConkerRecompedReloaded-windows-x64"
-          $env:QT_QPA_PLATFORM = 'offscreen'
+          # Windows' own display (the runner has a desktop session), as players see it: the offscreen platform has no
+          # fonts on Windows and would draw every letter as a box
           $p = Start-Process -FilePath "$dir\ConkerLauncher.exe" -ArgumentList '--screenshot', "$PWD\launcher.png" -PassThru
           if (-not $p.WaitForExit(120000)) { $p.Kill(); throw 'the launcher did not finish' }
           if (-not (Test-Path launcher.png)) { throw 'no screenshot: the launcher did not start' }
