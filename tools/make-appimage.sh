@@ -121,6 +121,15 @@ export EXTRA_QT_MODULES="waylandclient"
     -i "$pack/conker-recomped-and-reloaded.png" \
     --plugin qt
 
+# libOpenGL.so.0 comes along: Qt's GUI library links it (the launcher draws without OpenGL), and linuxdeploy leaves it
+# to the system, where many desktops lack it (Debian and Ubuntu split it into libopengl0). It is libglvnd's small
+# dispatcher, which hands every call to the system's own driver through libGLdispatch.
+if [ ! -e "$appdir/usr/lib/libOpenGL.so.0" ]; then
+    gl="$(ldconfig -p | awk '/libOpenGL\.so\.0 .*x86-64/ {print $NF; exit}')"
+    [ -n "$gl" ] || { echo "libOpenGL.so.0 not found on this host (install libglvnd / libopengl0)" >&2; exit 1; }
+    install -m 644 "$(readlink -f "$gl")" "$appdir/usr/lib/libOpenGL.so.0"
+fi
+
 # AppRun as a script that starts the program by its real path: run through a symlink at the AppImage's root, Qt takes
 # the root as the program's folder and finds neither qt.conf nor its plugins (and the launcher not its kit)
 rm -f "$appdir/AppRun"
