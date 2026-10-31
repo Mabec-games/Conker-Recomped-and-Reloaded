@@ -1,0 +1,234 @@
+<h3 align="center">Mabec Games presents</h3>
+
+<p align="center">
+  <img src="docs/images/logo.jpg" alt="Conker: Recomped &amp; Reloaded" width="100%">
+</p>
+
+<p align="center">
+  <b>Conker: Live &amp; Reloaded (Xbox, 2005), running natively on Linux.</b><br>
+  A static recompilation with a launcher that builds the game from your own disc, enhanced graphics, and online play
+  with room codes.
+</p>
+
+<p align="center">
+  <a href="#features">Features</a> ·
+  <a href="#enhanced-cutscenes">Enhanced cutscenes</a> ·
+  <a href="#play-online">Play online</a> ·
+  <a href="#install">Install</a> ·
+  <a href="#controls">Controls</a> ·
+  <a href="#known-limitations">Known limitations</a> ·
+  <a href="#credits">Credits</a>
+</p>
+
+<p align="center"><b>Version 1.0</b> · Linux x86_64 (AppImage) · GPL-3.0</p>
+
+> [!IMPORTANT]
+> This is an unofficial, non-commercial fan project. It is not affiliated with or endorsed by Rare, Microsoft or Xbox
+> Game Studios. **No part of the game is included.** You build it from your own copy of *Conker: Live & Reloaded*
+> (original Xbox, USA).
+
+## What it is
+
+*Conker: Live & Reloaded* was never released on PC. [**Live & Recompiled**](https://github.com/giacomozama/live-and-recompiled)
+by **giacomozama** and **TGP482** changes that: it translates the game's Xbox code into native code that runs directly
+on your PC, with a modern Vulkan renderer. There's no emulator.
+
+**Conker: Recomped & Reloaded** is a launcher and a modified build of that port:
+
+- **It builds the game for you.** On the first run you choose your disc image. The launcher extracts it and compiles
+  the game on your PC in a few minutes, with the compiler included, so it works offline.
+- **Every setting lives in the launcher,** not in menus inside the game: graphics, enhancements, audio, controls,
+  online and mods.
+- **It adds online play with room codes,** so friends can join your match over the internet.
+- **Everything stays in one folder**, next to the AppImage. Nothing goes to hidden folders or system locations.
+
+## Features
+
+**Graphics**
+- Native widescreen at any aspect ratio (16:9, 16:10, 21:9, 32:9). Wider screens show more of the scene, with
+  nothing stretched.
+- Any resolution, fullscreen, borderless or windowed, with internal rendering from 25% to 400% (supersampling).
+- 30 (original), 60, 120, 180 or 240 FPS, with V-Sync.
+- MSAA up to 8×, SMAA, anisotropic filtering up to 16×, ambient occlusion, plus optional film grain and chromatic
+  aberration.
+
+**Enhancements** (each one can be turned off)
+- Per-pixel lighting on characters and objects.
+- Softer fur shading, and full fur at a distance.
+- Characters and grass at full detail at every distance, and wind on distant grass.
+- Dynamic water that ripples as things move through it, and a fix for the blur on reflective floors.
+- Rope physics, and **skippable cutscenes**: press LT to skip any cutscene, even ones you haven't seen.
+
+**Controls**
+- Xbox, PlayStation and Switch controllers, with rumble and adjustable vibration strength.
+- Keyboard and mouse with mouse look, and every key rebindable in the launcher.
+- Up to 4 players in split screen on one PC, each with their own devices. Keyboards get a separate key set for
+  multiplayer matches.
+
+**Online**
+- Host a room and share a **6-word room code**. Friends join over the internet without typing any IP address. See
+  [Play online](#play-online).
+
+**And also**
+- **No in-game menus:** on the main menu, Esc / Start / Back ask *"Quit the game?"* with **Yes / No**.
+- **No more Xbox Live hang:** the dead Xbox Live sign-in can't be opened by accident.
+- **Optional decensor mod:** the [decensor mod](https://github.com/nastys/conker-live-and-reloaded-decensor) is
+  downloaded from its authors' latest release, checked against GitHub's checksum, and applied without touching your
+  disc image. It's off by default.
+- **Logs you can share:** the game's logs never contain IP addresses.
+
+## Enhanced cutscenes
+
+<p align="center">
+  <img src="docs/images/cutscene-king-conker.jpg" alt="King Conker on his throne, rendered with fur shading and per-pixel lighting" width="100%">
+</p>
+
+Cutscenes play at your resolution and frame rate, with the fur shading and per-pixel lighting enhancements. Turn on
+*Skippable cutscenes* to skip any of them with LT.
+
+## Play online
+
+<p align="center">
+  <img src="docs/images/online-match.jpg" alt="An online match between two PCs" width="49%">
+  <img src="docs/images/online-scoreboard.jpg" alt="The scoreboard of an online match with two players" width="49%">
+</p>
+
+The game's own **System Link** mode, which was LAN only on the Xbox, now works over the internet. There's no server in
+between.
+
+**Host:** in the launcher's **Multiplayer** tab, choose **Host a room**. The launcher asks your router to open UDP port
+3074 (UPnP) and shows a 6-word code such as `ELFISHLY-NINTENDO-SKULK-HUBCAP-ALMANAC-OLYMPICS`. Copy it to your friends,
+press **Play**, then choose **Multiplayer → Online Play → Host** in the game.
+
+**Join:** choose **Join a room**, paste the code, press **Play**, then choose **Multiplayer → Online Play → Play** and
+pick the host's match.
+
+**On the same network:** choose **This network only**. No code is needed, because games are found automatically.
+
+**How it works**
+- **What's in the code:** the host's public address, scrambled with a random 20-bit **room key**, plus a checksum.
+  The key is new every time you host, or when you press **New code**, so the same address never gives the same code.
+- **The key is enforced by the game:** the host's game only accepts players from the internet who have this room's
+  key. An old or leaked code stops working as soon as the host makes a new one, and players on a different version
+  are refused cleanly. Players on the host's own network don't need the key.
+- **Typos:** each word is identified by its first three letters, so small typos still work, and a wrong word is caught
+  99.8% of the time.
+- **If your router doesn't support UPnP:** the launcher tells you, and shows what to forward by hand (UDP 3074 to your
+  PC). If your PC has a firewall, allow UDP 3074 too.
+- **Privacy:** the code is scrambled, not encrypted. It keeps your IP off your screen and out of chat logs, but the
+  players you invite connect to your IP and can see it, as in any peer-to-peer game. Share codes with people you trust.
+- **If you can't host from your connection:** some providers share one public address between customers (CGNAT), and
+  the launcher warns about it. A virtual LAN such as Tailscale or ZeroTier works instead: enter the host's VPN address
+  under *Advanced*.
+
+**Tested so far:** 2 players on two PCs, connected over the internet with a room code. The game's lobby allows up to 16
+players, but **3 or more online players haven't been tested yet.** If you try it, the game log
+(`game/logs/game.log`) reports traffic every 30 seconds and refused players, without any addresses. Please share those
+lines.
+
+**Hosting many players:** as a rough guide, from Xbox-era games rather than measurements, plan on about 100–200 kbit/s
+of **upload** per player you host. That's 1.5–3 Mbit/s for 15 players. A wired connection and players close to you
+matter more than raw speed.
+
+Everyone in a match needs **the same version** of Conker: Recomped & Reloaded.
+
+## Install
+
+**You need:**
+- **Your own disc image:** *Conker: Live & Reloaded* for the original Xbox, **USA** release, as an `.iso`. Its
+  `default.xbe` has SHA-1 `2232a1b3874d67b4bb4cf53a940420d2dab59535`, and the launcher checks it for you.
+- **Linux x86_64 with glibc 2.43 or newer** for this build: Fedora 44, current Arch, CachyOS and Bazzite, for example.
+  Builds for older distributions will come from GitHub Actions.
+- **A GPU with Vulkan 1.3**, and FUSE 3 (`fusermount3`), which is standard on current desktops.
+- **About 8 GB free** while setting up, and about 5 GB afterwards.
+- **A controller is recommended** for multiplayer menus (see [Controls](#controls)).
+
+**Steps:**
+1. Download `ConkerRecompedReloaded-x86_64.AppImage` from
+   [Releases](https://github.com/Mabec-games/Conker-Recomped-and-Reloaded/releases) and put it in a folder of its own,
+   for example `~/Games/ConkerRecompedReloaded/`. Everything the game creates will live next to it.
+2. Make it executable (`chmod +x ConkerRecompedReloaded-x86_64.AppImage`, or tick *Allow executing* in its
+   properties), then run it.
+3. Choose your disc image and press **Install**. The launcher checks the disc, extracts it and builds the game, which
+   takes a few minutes. Nothing is downloaded.
+4. Press **PLAY**. The disc image is no longer needed.
+
+**The folder afterwards:**
+```
+ConkerRecompedReloaded-x86_64.AppImage
+launcher.ini          the launcher's preferences
+game/                 the built game, settings.toml, saves (hdd/), logs/, shader caches, assets/ (your disc's files)
+mods/                 the decensor mod, when turned on
+```
+
+Moving or deleting that one folder moves or removes everything. `--play` starts the game straight away, which is
+handy for a desktop shortcut.
+
+## Controls
+
+A controller works out of the box. On a keyboard, the default keys are:
+
+| Controller | Key | Controller | Key |
+|---|---|---|---|
+| Left stick | W A S D | Right stick (camera) | mouse, or arrow keys |
+| **A** (jump, confirm) | **Space** | **B** (back, cancel) | **E** or right mouse button |
+| X | R | Y | Tab |
+| LB (white) | T | RB (black) | K |
+| LT | Q or middle mouse button | RT (fire) | Left Ctrl or left mouse button |
+| Start (pause) | Enter or Esc | Back | Backspace |
+| D-pad | 1 2 3 4 | Stick clicks | Left Shift, Left Alt |
+
+Rebind any of them in **Controls**, separately for single player and multiplayer matches.
+
+## Known limitations
+
+- **Keyboard in multiplayer menus:** some screens (class or team selection) don't respond to mouse clicks, and the
+  on-screen hints show controller buttons. Use Space for A and E for B, or a controller.
+- **3+ online players:** untested so far (see [Play online](#play-online)).
+- **This AppImage needs glibc 2.43+.** The game itself runs on anything from about 2020 on. Wider support is next.
+- **Windows:** the game already builds for Windows, and a Windows launcher is the next step.
+- **Supported disc:** the USA disc image only.
+
+## Building from source
+
+```sh
+git clone --recurse-submodules https://github.com/Mabec-games/Conker-Recomped-and-Reloaded
+cd Conker-Recomped-and-Reloaded
+# the game's build kit, from the live-and-recompiled submodule (launcher branch); it needs your extracted disc in
+# live-and-recompiled/assets/ (see that project's BUILDING.md)
+(cd live-and-recompiled && tools/package.sh)
+# the launcher (Qt 6 Widgets and Network, libarchive; toml++ and miniupnpc are fetched by CMake)
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
+tools/make-appimage.sh      # dist/ConkerRecompedReloaded-x86_64.AppImage, with the compiler and licences inside
+```
+
+Tests: `tests/online_tool codes` (room codes), and `tests/xnet_wire_test.cpp` in the submodule (the online packet rules).
+
+## Credits
+
+This rests on the work of many people. Thank you all.
+
+| | |
+|---|---|
+| **Live & Recompiled**, the native port | **giacomozama**, with **TGP482**: [giacomozama/live-and-recompiled](https://github.com/giacomozama/live-and-recompiled) |
+| **Xbox XBE Recomp**, the recompiler and runtime | **TGP482**, with Joshhhuaaa: [TGP482/XboxXBERecomp](https://github.com/TGP482/XboxXBERecomp) |
+| **Decensor mod** | **nastys** (Italian, French), **Vaani** (English), **Theconker64** (Spanish): [nastys/conker-live-and-reloaded-decensor](https://github.com/nastys/conker-live-and-reloaded-decensor) |
+| References for the Xbox hardware | [xemu](https://xemu.app) and [Cxbx-Reloaded](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded) |
+| Information about the game's code | the [ConkerXbox60FPSWidescreen patch](https://www.moddb.com/downloads/conkerxbox60fpswidescreen) |
+| Launcher, online rooms, AppImage, artwork | **Mabec Games** |
+| *Conker: Live & Reloaded* | Rare / Microsoft Game Studios |
+
+The launcher is built with Qt 6, libarchive, toml++ and miniupnpc. It ships the Zig compiler (with LLVM) to build the
+game, uses the EFF Short Wordlist for room codes, and is packaged with linuxdeploy. Every project, author and licence
+is listed in [CREDITS.md](CREDITS.md), and the full licence texts are in the launcher (*Launcher → About and credits →
+Licence texts*).
+
+**Source:** the launcher is this repository (GPL-3.0). The game it builds is
+[Mabec-games/live-and-recompiled](https://github.com/Mabec-games/live-and-recompiled/tree/launcher), branch
+`launcher` (GPL-3.0), included here as a submodule.
+
+## Legal
+
+*Conker*, *Conker: Live & Reloaded* and *Xbox* are trademarks of their respective owners. This project contains no
+game code or assets, and you must use your own legally obtained copy. It's offered as is, without warranty, under the
+[GPL-3.0](LICENSE).

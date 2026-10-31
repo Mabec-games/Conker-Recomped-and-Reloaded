@@ -1,0 +1,11 @@
+build/
+packaging/AppDir/
+packaging/cache/
+packaging/tools/
+packaging/*.desktop
+packaging/*.png
+dist/
+compile_commands.json
+packaging/qt-plugins/
+packaging/qmake-bin/
+packaging/appimage.log

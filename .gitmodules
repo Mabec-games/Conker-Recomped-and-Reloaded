@@ -1,0 +1,4 @@
+[submodule "live-and-recompiled"]
+	path = live-and-recompiled
+	url = https://github.com/Mabec-games/live-and-recompiled.git
+	branch = launcher
