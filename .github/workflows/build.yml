@@ -107,10 +107,15 @@ jobs:
           ./ConkerRecompedReloaded-x86_64.AppImage --appimage-extract >/dev/null   # no FUSE in a container
           export APPIMAGE="$PWD/ConkerRecompedReloaded-x86_64.AppImage" QT_QPA_PLATFORM=offscreen QT_FORCE_STDERR_LOGGING=1
           timeout 120 squashfs-root/AppRun --screenshot "$PWD/launcher.png"
-          test -s launcher.png && echo "launcher started and drew its window"
+          test -s launcher.png || { echo "no screenshot: the launcher did not start"; exit 1; }
+          echo "launcher started and drew its window"
           squashfs-root/usr/share/conker-launcher/zig/zig version
-          squashfs-root/usr/share/conker-launcher/setup-linux --help 2>&1 | grep -q usage && echo "build kit runs"
-          test -s squashfs-root/usr/share/doc/conker-launcher/licenses/CREDITS.md && echo "licences present"
+          kit_out="$(squashfs-root/usr/share/conker-launcher/setup-linux --help 2>&1 || true)"
+          echo "$kit_out" | head -3
+          grep -q usage <<<"$kit_out" || { echo "the build kit did not run"; exit 1; }
+          echo "build kit runs"
+          test -s squashfs-root/usr/share/doc/conker-launcher/licenses/CREDITS.md || { echo "licences missing"; exit 1; }
+          echo "licences present"
           echo "image=$(echo '${{ matrix.image }}' | tr ':/' '--')" >> "$GITHUB_ENV"
 
       - uses: actions/upload-artifact@v4
