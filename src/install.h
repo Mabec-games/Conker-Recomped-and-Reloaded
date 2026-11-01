@@ -30,6 +30,12 @@ QString ModsDir();     // <root>/mods
 QString WorkDir();     // <root>/build
 QString SetupTool();   // <root>/setup-linux or setup-windows.exe
 bool GameBuilt();
+// The build kit that made the game: the setup tool's SHA-256, kept in launcher.ini after each build. A launcher update
+// with a new kit (new game code) shows as KitChanged until the game is built again. Builds from before this was kept
+// count as changed; without a setup tool (a dev build) nothing is.
+QString KitId();
+void MarkKitBuilt();
+bool KitChanged();
 
 // The compiler the build kit uses: Zig, pinned by the kit (live-and-recompiled tools/toolchains.cmake; keep these in
 // step with it). The kit downloads it into build/toolchain/<os>-<host> on its first run and reuses it while its

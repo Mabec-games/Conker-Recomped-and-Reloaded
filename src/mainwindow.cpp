@@ -222,6 +222,18 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     if (install::GameBuilt()) install::MakePortable();  // its settings and saves stay in game/
     LoadAll();
     if (!install::GameBuilt()) ShowSetup(false);
+    // a launcher update that brings new game code: the game is rebuilt to get it (asked once a start, not with --play)
+    else if (install::KitChanged() && !QApplication::arguments().contains("--play") &&
+             !QApplication::arguments().contains("--screenshot"))
+        QTimer::singleShot(0, this, [this] {
+            const auto answer = QMessageBox::question(
+                this, tr("Game update"),
+                tr("This launcher comes with an updated game. Rebuild the game now to get it?\n\n"
+                   "It takes a few minutes and works offline. Your settings and saves are kept."),
+                QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+            if (answer == QMessageBox::Yes) ShowSetup(true);
+            else SetStatus(tr("An updated game is ready to build: Launcher tab → Rebuild the game."));
+        });
     // the decensor mod's latest release, in the background (the mods folder is known only now)
     if (decensorAuto_->isChecked() && !modsPath_->text().isEmpty()) {
         decensorNote_ = tr("Checking GitHub…");
@@ -330,6 +342,9 @@ QWidget* MainWindow::BuildGraphics() {
     Hint(f, tr("Percent of the output resolution the 3D scene is drawn at. Above 100% supersamples."));
     IntChoice(f, tr("Frame rate"), "frame_rate", {30, 60, 120, 180, 240},
               {tr("30 (original)"), "60", "120", "180", "240"}, 60);
+    Check(f, tr("Game logic at 30 (original timing)"), "console_timing", false,
+          tr("Runs the game itself at 30 like the original and draws the frames above that in between. Avoids "
+             "60 fps bugs such as the barn roof death in Barn Boys, but controls respond at 30. Shows at most 120."));
     Check(f, tr("V-Sync"), "vsync", true);
     IntChoice(f, tr("Anisotropic filtering"), "anisotropic_filtering", {0, 2, 4, 8, 16},
               {tr("Game default"), "2×", "4×", "8×", "16×"}, 0);

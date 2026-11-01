@@ -49,7 +49,8 @@ on your PC, with a modern Vulkan renderer. There's no emulator.
 - Native widescreen at any aspect ratio (16:9, 16:10, 21:9, 32:9). Wider screens show more of the scene, with
   nothing stretched.
 - Any resolution, fullscreen, borderless or windowed, with internal rendering from 25% to 400% (supersampling).
-- 30 (original), 60, 120, 180 or 240 FPS, with V-Sync.
+- 30 (original), 60, 120, 180 or 240 FPS, with V-Sync. Or **Game logic at 30 (original timing)**: the game runs at
+  the original 30 and the frames up to 60 or 120 are drawn in between, which avoids 60 fps bugs.
 - MSAA up to 8×, SMAA, anisotropic filtering up to 16×, ambient occlusion, plus optional film grain and chromatic
   aberration.
 
@@ -174,6 +175,10 @@ mods/                 the decensor mod, when turned on
 Moving or deleting that one folder moves or removes everything. `--play` starts the game straight away, which is
 handy for a desktop shortcut.
 
+**Updating:** replace the AppImage (on Windows, extract the new zip over the old folder). When a new version brings
+new game code, the launcher offers to rebuild the game on its next start. That takes a few minutes, works offline,
+and keeps your settings and saves.
+
 ## Controls
 
 A controller works out of the box. On a keyboard, the default keys are:
@@ -194,12 +199,43 @@ Rebind any of them in **Controls**, separately for single player and multiplayer
 
 - **Keyboard in multiplayer menus:** some screens (class or team selection) don't respond to mouse clicks, and the
   on-screen hints show controller buttons. Use Space for A and E for B, or a controller.
+- **Instant death on the barn roof (Barn Boys) with 60 fps game logic:** a known upstream bug
+  ([#1](https://github.com/Mabec-games/Conker-Recomped-and-Reloaded/issues/1),
+  [live-and-recompiled#2](https://github.com/giacomozama/live-and-recompiled/issues/2)). Tick Graphics → **Game
+  logic at 30 (original timing)** for that part: the game runs at the original 30 while 60 or 120 frames a second
+  are still shown, and Conker survives the roof.
 - **3+ online players:** untested so far (see [Play online](#play-online)).
 - **Windows is new:** the launcher, the bundled compiler and the build kit pass automated tests on Windows, but full
   installs have been played on Linux so far. Reports from Windows players are very welcome.
 - **When hosting on Windows:** Windows Defender Firewall asks whether the game may use the network the first time.
   Allow it on private networks, or friends can't connect.
 - **Supported disc:** the USA disc image only.
+
+## Reporting bugs
+
+Open an [issue](https://github.com/Mabec-games/Conker-Recomped-and-Reloaded/issues) and include:
+
+- what happened and where (chapter and area), and whether it happens every time
+- a video or screenshot if you can
+- your system: Linux distribution or Windows version, and your graphics card
+- your launcher settings, especially **Frame rate**: some bugs only happen at 60 fps and above, so please say
+  whether the bug still happens at 30
+- the game's log
+
+Everything stays in the folder you installed into, on both Linux and Windows:
+
+| What | Where |
+|---|---|
+| Game log | `game/logs/game.log` |
+| Crash dumps (if the game crashed) | `game/CrashDumps/` |
+| Game settings | `game/settings.toml` |
+| Launcher settings | `launcher.ini` |
+
+On Windows, the same paths use backslashes (`game\logs\game.log`).
+
+**Copy the log before you start the game again:** each start replaces it. The log has no IP addresses, but it
+does show the folder the game is installed in, which can include your user name. Edit that out before attaching
+if you like.
 
 ## Building from source
 

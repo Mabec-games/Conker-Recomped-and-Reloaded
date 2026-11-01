@@ -386,6 +386,7 @@ void SetupPage::RunSetup() {
             // the kit removes the generated code and its own files, and keeps a downloaded compiler for rebuilds;
             // with the shipped one there is nothing worth keeping (only Zig's cache)
             if (!bundled.isEmpty()) QDir(install::WorkDir()).removeRecursively();
+            install::MarkKitBuilt();
             Finish(true, tr("The game is ready."));
         }
     });

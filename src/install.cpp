@@ -13,6 +13,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QSettings>
 
 #include <vector>
 
@@ -70,6 +71,26 @@ QString SetupTool() {
 }
 
 bool GameBuilt() { return QFileInfo(GameExe()).isFile(); }
+
+QString KitId() {
+    static QString id = [] {
+        QFile f(SetupTool());
+        if (!f.open(QIODevice::ReadOnly)) return QString();
+        QCryptographicHash h(QCryptographicHash::Sha256);
+        h.addData(&f);
+        return QString::fromLatin1(h.result().toHex());
+    }();
+    return id;
+}
+
+void MarkKitBuilt() {
+    if (!KitId().isEmpty()) QSettings(IniFile(), QSettings::IniFormat).setValue("game/kit", KitId());
+}
+
+bool KitChanged() {
+    return GameBuilt() && !KitId().isEmpty() &&
+           QSettings(IniFile(), QSettings::IniFormat).value("game/kit").toString() != KitId();
+}
 
 QString CompilerArchiveName() {
 #ifdef Q_OS_WIN
