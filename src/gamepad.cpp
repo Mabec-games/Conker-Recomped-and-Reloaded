@@ -97,6 +97,9 @@ bool Gamepad::Open() {
     SDL_SetHint(SDL_HINT_NO_SIGNAL_HANDLERS, "1");
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI, "0");
+    // Windows: XInput alone for the Xbox pads, as the game reads them (src/runtime/core/input.cpp in the game). RawInput
+    // with XInput can lose a pad on the Xbox wireless receiver, and a pad the launcher never saw (issue #5) is one
+    SDL_SetHint(SDL_HINT_JOYSTICK_RAWINPUT, "0");
     if (!SDL_InitSubSystem(SDL_INIT_GAMEPAD)) {
         next_try = now + kRetryMs;
         return false;
