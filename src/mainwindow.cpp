@@ -388,6 +388,8 @@ QWidget* MainWindow::BuildGraphics() {
     IntChoice(f, tr("MSAA"), "msaa", {1, 2, 4, 8}, {tr("Off"), "2×", "4×", "8×"}, 1);
 
     v->addWidget(Group(tr("Post-processing"), &f));
+    Check(f, tr("Vignette"), "vignette", true,
+          tr("The game's darkened screen edges. The red flash when you're hurt stays either way."));
     Check(f, tr("SMAA anti-aliasing"), "smaa", false);
     Percent(f, tr("Film grain"), "film_grain", 0, 100, 0);
     Percent(f, tr("Chromatic aberration"), "chromatic_aberration", 0, 100, 0);
