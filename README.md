@@ -53,6 +53,12 @@ on your PC, with a modern Vulkan renderer. There's no emulator.
   the original 30 and the frames up to 60 or 120 are drawn in between, which avoids 60 fps bugs.
 - MSAA up to 8×, SMAA, anisotropic filtering up to 16×, ambient occlusion, plus optional film grain and chromatic
   aberration.
+- The game's vignette (its darkened screen edges) can be turned off. The red flash when you're hurt stays.
+
+**Language and sound**
+- Play in **English, French, German, Spanish, Italian or Japanese**: menus and subtitles from the disc. The voices are
+  English in every language.
+- **Cutscene volume:** cutscenes play quieter than the rest of the game; raise them by up to 12 dB.
 
 **Enhancements** (each one can be turned off)
 - Per-pixel lighting on characters and objects.
@@ -66,6 +72,8 @@ on your PC, with a modern Vulkan renderer. There's no emulator.
 - Keyboard and mouse with mouse look, and every key rebindable in the launcher.
 - Up to 4 players in split screen on one PC, each with their own devices. Keyboards get a separate key set for
   multiplayer matches.
+- **The launcher works with a controller too,** for the Steam Deck's Game Mode or a couch: D-pad and A to change
+  settings, LB / RB for the tabs, Start to play. On a small screen it scales itself up (Launcher → Launcher size).
 
 **Online**
 - Host a room and share a **6-word room code**. Friends join over the internet without typing any IP address. See
@@ -76,7 +84,8 @@ on your PC, with a modern Vulkan renderer. There's no emulator.
 - **No more Xbox Live hang:** the dead Xbox Live sign-in can't be opened by accident.
 - **Optional decensor mod:** the [decensor mod](https://github.com/nastys/conker-live-and-reloaded-decensor) is
   downloaded from its authors' latest release, checked against GitHub's checksum, and applied without touching your
-  disc image. It's off by default.
+  disc image. It's off by default. Its subtitles are uncensored in English, French, Italian and Spanish; its audio is
+  a work in progress (so far the Great Mighty Poo song and the Greg, Uga Buga, Spooky and Windy cutscenes).
 - **Logs you can share:** the game's logs never contain IP addresses.
 
 ## Enhanced cutscenes
