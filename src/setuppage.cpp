@@ -109,6 +109,7 @@ SetupPage::SetupPage(QWidget* parent) : QWidget(parent) {
     cancel_ = new QPushButton(tr("Cancel"));
     start_ = new QPushButton(tr("Install"));
     start_->setMinimumSize(160, 44);
+    start_->setObjectName("primary");  // Start on a controller presses it (gamepad.h)
     QFont sf = start_->font();
     sf.setBold(true);
     sf.setPointSizeF(sf.pointSizeF() * 1.2);

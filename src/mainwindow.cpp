@@ -51,8 +51,12 @@ namespace {
 // the artwork across the top, filling its width and cut from the top down, fading into the window below
 class Banner : public QWidget {
 public:
+    // the logo's height in the image, with a little sky above and below: a banner shorter than it shows the picture
+    // smaller, so the logo stays whole
+    static constexpr double kLogoRows = 420;
+
     explicit Banner(QWidget* parent) : QWidget(parent), image_(":/banner.jpg") {
-        setMinimumHeight(230);
+        setFixedHeight(300);  // MainWindow::FitBanner makes it shorter in a short window
         setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     }
     QSize sizeHint() const override { return {960, 300}; }
@@ -61,11 +65,37 @@ protected:
     void paintEvent(QPaintEvent*) override {
         QPainter p(this);
         p.setRenderHint(QPainter::SmoothPixmapTransform);
-        const double scale = std::max(double(width()) / image_.width(), double(height()) / image_.height());
+        p.fillRect(rect(), palette().color(QPalette::Window));
+        const double cover = std::max(double(width()) / image_.width(), double(height()) / image_.height());
+        const double scale = std::min(cover, height() / kLogoRows);
+        if (scale < cover) {
+            // the scene below the logo faintly across the whole width, behind the smaller picture
+            const QRectF scene(0, kLogoRows, image_.width(), image_.height() - kLogoRows);
+            const double fill = std::max(double(width()) / scene.width(), double(height()) / scene.height());
+            const QSizeF back(scene.width() * fill, scene.height() * fill);
+            p.setOpacity(0.35);
+            p.drawPixmap(QRectF((width() - back.width()) / 2.0, 0.0, back.width(), back.height()), image_, scene);
+            p.setOpacity(1.0);
+        }
         const QSizeF size(image_.width() * scale, image_.height() * scale);
         // centred across, from the top edge (the logo) down
         const QRectF target((width() - size.width()) / 2.0, 0.0, size.width(), size.height());
         p.drawPixmap(target, image_, image_.rect());
+        if (scale < cover) {
+            // its sides fade into the faint one
+            QColor edge = palette().color(QPalette::Window);
+            edge.setAlpha(0);
+            QColor solid = edge;
+            solid.setAlpha(150);
+            const double fadeW = std::min(80.0, size.width() / 4);
+            for (const bool left : {true, false}) {
+                const double x = left ? target.left() : target.right() - fadeW;
+                QLinearGradient g(x, 0, x + fadeW, 0);
+                g.setColorAt(left ? 0 : 1, solid);
+                g.setColorAt(left ? 1 : 0, edge);
+                p.fillRect(QRectF(x, 0, fadeW, height()), g);
+            }
+        }
         QLinearGradient fade(0, height() * 0.72, 0, height());
         QColor base = palette().color(QPalette::Window);
         base.setAlpha(0);
@@ -151,7 +181,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     auto* v = new QVBoxLayout(central);
     v->setContentsMargins(0, 0, 0, 0);
     v->setSpacing(0);
-    v->addWidget(new Banner(central));
+    banner_ = new Banner(central);
+    v->addWidget(banner_);
 
     auto* body = new QWidget;
     auto* bv = new QVBoxLayout(body);
@@ -188,6 +219,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     });
     play_ = new QPushButton(tr("PLAY"));
     play_->setDefault(true);
+    play_->setObjectName("primary");  // Start on a controller presses it (gamepad.h)
     play_->setMinimumSize(160, 44);
     QFont pf = play_->font();
     pf.setBold(true);
@@ -211,7 +243,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     stack_->addWidget(setupPage_);
     v->addWidget(stack_, 1);
     setCentralWidget(central);
-    resize(1000, 860);
+    // no taller or wider than the screen: a Steam Deck's is 1280 × 800, and Play is at the bottom
+    const QRect screen = QGuiApplication::primaryScreen()->availableGeometry();
+    const int height = std::min(860, screen.height());
+    FitBanner(height);  // first, or the full banner makes the window too tall to fit
+    resize(std::min(1000, screen.width()), height);
     connect(setupPage_, &SetupPage::Done, this, [this] {
         stack_->setCurrentIndex(0);
         LoadAll();
@@ -221,6 +257,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
 
     if (install::GameBuilt()) install::MakePortable();  // its settings and saves stay in game/
     LoadAll();
+    if (install::GameBuilt()) play_->setFocus();  // a controller starts on Play
     if (!install::GameBuilt()) ShowSetup(false);
     // a launcher update that brings new game code: the game is rebuilt to get it (asked once a start, not with --play)
     else if (install::KitChanged() && !QApplication::arguments().contains("--play") &&
@@ -402,6 +439,22 @@ QWidget* MainWindow::BuildAudio() {
     auto* page = new QWidget;
     auto* v = new QVBoxLayout(page);
     QFormLayout* f;
+    v->addWidget(Group(tr("Language"), &f));
+    {
+        // the console's language setting (live-and-recompiled app::Language), which the game reads as it starts
+        auto* language = new QComboBox;
+        language->addItem("English", "english");
+        language->addItem("Français", "french");
+        language->addItem("Deutsch", "german");
+        language->addItem("Español", "spanish");
+        language->addItem("Italiano", "italian");
+        language->addItem("日本語", "japanese");
+        f->addRow(tr("Language"), language);
+        Hint(f, tr("Menus and subtitles. The voices are English in every language. The decensor mod's subtitles "
+                   "cover English, French, Italian and Spanish."));
+        binds_.push_back({[=](const Config& c) { SetChoice(language, c.Str("language", "english")); },
+                          [=](Config& c) { c.SetStr("language", language->currentData().toString()); }});
+    }
     v->addWidget(Group(tr("Sound"), &f));
     Percent(f, tr("Volume"), "volume", 0, 100, 100);
     audioDevice_ = new QComboBox;
@@ -1062,6 +1115,20 @@ QWidget* MainWindow::BuildLauncher() {
     connect(closeOnPlay_, &QCheckBox::toggled, this, [](bool on) { QSettings(install::IniFile(), QSettings::IniFormat).setValue("launcher/closeOnPlay", on); });
     f->addRow(closeOnPlay_);
     Hint(f, tr("Otherwise it hides while you play and comes back when the game closes."));
+    {
+        auto* scale = new QComboBox;
+        scale->addItem(install::GamescopeSession() ? tr("Automatic (125% in Game Mode)") : tr("Automatic (100% here)"),
+                       "auto");
+        for (const char* p : {"100", "125", "150"}) scale->addItem(QString("%1%").arg(p), p);
+        SetChoice(scale, s.value("launcher/scale", "auto").toString());
+        f->addRow(tr("Launcher size"), scale);
+        Hint(f, tr("Bigger text and buttons for small screens such as the Steam Deck's. Takes effect when the "
+                   "launcher next opens."));
+        connect(scale, &QComboBox::currentIndexChanged, this, [this, scale] {
+            QSettings(install::IniFile(), QSettings::IniFormat).setValue("launcher/scale", scale->currentData());
+            SetStatus(tr("The new launcher size applies the next time it opens."));
+        });
+    }
 
     // who made what this rests on
     auto* about = new QGroupBox(tr("About and credits"));
@@ -1310,6 +1377,14 @@ void MainWindow::Play() {
 }
 
 void MainWindow::SetStatus(const QString& text) { status_->setText(text); }
+
+// the banner gives way in a short window (a Steam Deck, a bigger launcher size): the settings and Play keep ~560 px
+void MainWindow::FitBanner(int windowHeight) { banner_->setFixedHeight(std::clamp(windowHeight - 560, 56, 300)); }
+
+void MainWindow::resizeEvent(QResizeEvent* e) {
+    QMainWindow::resizeEvent(e);
+    FitBanner(height());
+}
 
 void MainWindow::closeEvent(QCloseEvent* e) {
     if (game_) {

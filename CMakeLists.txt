@@ -29,6 +29,23 @@ FetchContent_Declare(miniupnpc
     SOURCE_SUBDIR miniupnpc)
 FetchContent_MakeAvailable(miniupnpc)
 
+# SDL3 for controller navigation (src/gamepad.cpp): static, gamepads only (no audio, renderer or GPU), the release the
+# game's next kit pins
+set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+set(SDL_STATIC ON CACHE BOOL "" FORCE)
+set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
+set(SDL_AUDIO OFF CACHE BOOL "" FORCE)
+set(SDL_RENDER OFF CACHE BOOL "" FORCE)
+set(SDL_GPU OFF CACHE BOOL "" FORCE)
+set(SDL_CAMERA OFF CACHE BOOL "" FORCE)
+set(SDL_DIALOG OFF CACHE BOOL "" FORCE)
+set(SDL_INSTALL OFF CACHE BOOL "" FORCE)
+FetchContent_Declare(SDL3
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+    GIT_TAG release-3.4.18
+    GIT_SHALLOW TRUE)
+FetchContent_MakeAvailable(SDL3)
+
 qt_add_executable(ConkerLauncher WIN32
     src/main.cpp
     src/paths.cpp
@@ -41,11 +58,12 @@ qt_add_executable(ConkerLauncher WIN32
     src/online.cpp
     src/setuppage.cpp
     src/mainwindow.cpp
+    src/gamepad.cpp
     resources/resources.qrc
 )
 
 target_link_libraries(ConkerLauncher PRIVATE Qt6::Widgets Qt6::Network LibArchive::LibArchive tomlplusplus::tomlplusplus
-    libminiupnpc-static)
+    libminiupnpc-static SDL3::SDL3-static)
 
 if(WIN32)
     target_compile_definitions(ConkerLauncher PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)

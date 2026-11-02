@@ -51,6 +51,7 @@ QString OfflineCompiler();      // the archive placed beside the launcher, "" wh
 bool UnpackCompiler(const QString& archive, QString* error);
 qint64 FolderSize(const QString& dir);
 void MakePortable();   // writes game/portable.txt
+bool GamescopeSession();  // running inside gamescope: a Steam Deck's Game Mode (the launcher scales up for it)
 
 // the default.xbe SHA-1s the build kit accepts: the USA disc's, and the Microsoft Store copy's (same code)
 bool SupportedXbe(const QString& sha1);

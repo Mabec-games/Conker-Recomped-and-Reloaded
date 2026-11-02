@@ -37,6 +37,8 @@ public:
 
 protected:
     void closeEvent(QCloseEvent* e) override;
+    void resizeEvent(QResizeEvent* e) override;
+    void FitBanner(int windowHeight);
 
 private:
     // a widget tied to a settings.toml entry: shown from the file, written back into it
@@ -85,6 +87,7 @@ private:
     void ShowSetup(bool rebuild);
     QLabel* status_ = nullptr;
     QPushButton* play_ = nullptr;
+    QWidget* banner_ = nullptr;
     QProcess* game_ = nullptr;
 
     // graphics

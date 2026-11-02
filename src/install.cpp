@@ -223,6 +223,11 @@ bool UnpackCompiler(const QString& archivePath, QString* error) {
     return true;
 }
 
+bool GamescopeSession() {
+    return qEnvironmentVariableIsSet("GAMESCOPE_WAYLAND_DISPLAY") ||
+           qEnvironmentVariable("XDG_CURRENT_DESKTOP").contains("gamescope", Qt::CaseInsensitive);
+}
+
 void MakePortable() {
     QDir().mkpath(GameDir());
     QFile f(GameDir() + "/portable.txt");
