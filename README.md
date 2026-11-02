@@ -20,7 +20,7 @@
   <a href="#credits">Credits</a>
 </p>
 
-<p align="center"><b>Version 1.0</b> · Linux x86_64 (AppImage) · Windows 10/11 x64 (portable zip) · GPL-3.0</p>
+<p align="center"><b>Version 1.3</b> · Linux x86_64 (AppImage) · Windows 10/11 x64 (portable zip) · GPL-3.0</p>
 
 > [!IMPORTANT]
 > This is an unofficial, non-commercial fan project. It is not affiliated with or endorsed by Rare, Microsoft or Xbox
