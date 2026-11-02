@@ -25,7 +25,7 @@
 > [!IMPORTANT]
 > This is an unofficial, non-commercial fan project. It is not affiliated with or endorsed by Rare, Microsoft or Xbox
 > Game Studios. **No part of the game is included.** You build it from your own copy of *Conker: Live & Reloaded*
-> (original Xbox, USA).
+> (original Xbox, USA or Europe).
 
 ## What it is
 
@@ -146,8 +146,11 @@ Everyone in a match needs **the same version** of Conker: Recomped & Reloaded.
 ## Install
 
 **You need:**
-- **Your own disc image:** *Conker: Live & Reloaded* for the original Xbox, **USA** release, as an `.iso`. Its
-  `default.xbe` has SHA-1 `2232a1b3874d67b4bb4cf53a940420d2dab59535`, and the launcher checks it for you.
+- **Your own disc image:** *Conker: Live & Reloaded* for the original Xbox, **USA or Europe** release, as an `.iso`.
+  Its `default.xbe` has SHA-1 `2232a1b3874d67b4bb4cf53a940420d2dab59535` (USA) or
+  `68a37f0d03d73dabc86a848df5ec1820dd551254` (Europe), and the launcher checks it for you. Both discs hold the same
+  game (only the `default.xbe` header differs), so they build the same game: mods work the same, and players with
+  either disc can play online together.
 - **Linux:** x86_64 with **glibc 2.34 or newer** (Debian 12, Ubuntu 22.04, Fedora 35, current Arch, Bazzite and
   newer), and FUSE 3 (`fusermount3`), which is standard on current desktops.
 - **Windows:** Windows 10 or 11, 64-bit.
@@ -218,7 +221,7 @@ Rebind any of them in **Controls**, separately for single player and multiplayer
   installs have been played on Linux so far. Reports from Windows players are very welcome.
 - **When hosting on Windows:** Windows Defender Firewall asks whether the game may use the network the first time.
   Allow it on private networks, or friends can't connect.
-- **Supported disc:** the USA disc image only.
+- **Supported discs:** the USA and Europe disc images only.
 
 ## Reporting bugs
 

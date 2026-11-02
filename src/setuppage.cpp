@@ -160,7 +160,7 @@ void SetupPage::Prepare(bool rebuild) {
                            "few minutes. To extract a disc image again instead, choose it below.")
                             .arg(QDir::toNativeSeparators(install::Assets()), rebuild ? tr("Rebuild") : tr("Install")));
     else
-        intro_->setText(tr("Choose your own Conker: Live & Reloaded disc image (original Xbox, USA). The launcher "
+        intro_->setText(tr("Choose your own Conker: Live & Reloaded disc image (original Xbox, USA or Europe). The launcher "
                            "extracts it into its own folder and builds the game from it, which takes a few minutes "
                            "and needs about 8 GB free while it works. Everything stays in:\n%1\n\nThe disc image is "
                            "only read, and is not needed afterwards.")
@@ -187,7 +187,7 @@ void SetupPage::Refresh() {
     if (!iso.isEmpty()) {
         const install::Disc d = install::CheckIso(iso);
         if (d.ok) {
-            check_->setText(tr("✔ Conker: Live & Reloaded (USA), %1 files, %2.").arg(d.files).arg(Size(d.bytes)));
+            check_->setText(tr("✔ Conker: Live & Reloaded (%1), %2 files, %3.").arg(d.release).arg(d.files).arg(Size(d.bytes)));
             ready = true;
         } else {
             check_->setText(Problem(d.error));

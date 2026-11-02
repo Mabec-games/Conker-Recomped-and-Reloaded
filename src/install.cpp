@@ -236,10 +236,14 @@ void MakePortable() {
         f.write("This file keeps the game's settings, saves, logs and caches in this folder.\n");
 }
 
-bool SupportedXbe(const QString& sha1) {
-    return sha1 == "2232a1b3874d67b4bb4cf53a940420d2dab59535" ||  // USA disc
-           sha1 == "68a37f0d03d73dabc86a848df5ec1820dd551254";    // Microsoft Store (same code, another header)
+QString XbeRelease(const QString& sha1) {
+    if (sha1 == "2232a1b3874d67b4bb4cf53a940420d2dab59535") return QStringLiteral("USA");
+    // the Europe disc, and the Microsoft Store package (the same file): the USA code, another header
+    if (sha1 == "68a37f0d03d73dabc86a848df5ec1820dd551254") return QStringLiteral("Europe");
+    return QString();
 }
+
+bool SupportedXbe(const QString& sha1) { return !XbeRelease(sha1).isEmpty(); }
 
 // ── Xbox DVD file system (XDVDFS) ────────────────────────────────────────────────────────────────────────────────────
 // A volume descriptor at sector 32 of the game partition ("MICROSOFT*XBOX*MEDIA", then the root directory's sector
@@ -361,10 +365,11 @@ Disc CheckIso(const QString& iso) {
         return d;
     }
     d.sha1 = QString::fromLatin1(QCryptographicHash::hash(data, QCryptographicHash::Sha1).toHex());
-    if (!SupportedXbe(d.sha1)) {
-        d.error = QObject::tr("This is a different release of the game than the one supported. Conker: Live & "
-                              "Reloaded for the original Xbox, USA disc, is needed (its default.xbe has SHA-1 "
-                              "2232a1b3…, this one has %1).").arg(d.sha1);
+    d.release = XbeRelease(d.sha1);
+    if (d.release.isEmpty()) {
+        d.error = QObject::tr("This is a different release of the game than the ones supported. Conker: Live & "
+                              "Reloaded for the original Xbox, USA or Europe disc, is needed (its default.xbe has "
+                              "SHA-1 2232a1b3… or 68a37f0d…, this one has %1).").arg(d.sha1);
         return d;
     }
     d.ok = true;

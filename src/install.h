@@ -53,13 +53,17 @@ qint64 FolderSize(const QString& dir);
 void MakePortable();   // writes game/portable.txt
 bool GamescopeSession();  // running inside gamescope: a Steam Deck's Game Mode (the launcher scales up for it)
 
-// the default.xbe SHA-1s the build kit accepts: the USA disc's, and the Microsoft Store copy's (same code)
+// the default.xbe SHA-1s the build kit accepts: the USA disc's, and the Europe disc's (= the Microsoft Store copy's).
+// Both have the same code and data, only the header (signature, region, rating) differs, so they build the same game.
 bool SupportedXbe(const QString& sha1);
+// the release a supported default.xbe comes from ("USA", "Europe"), empty for any other
+QString XbeRelease(const QString& sha1);
 
 struct Disc {
     bool ok = false;
     QString error;      // why not
     QString sha1;       // of its default.xbe
+    QString release;    // XbeRelease(sha1)
     qint64 bytes = 0;   // all its files
     int files = 0;
 };
