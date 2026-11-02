@@ -40,6 +40,12 @@ set(SDL_GPU OFF CACHE BOOL "" FORCE)
 set(SDL_CAMERA OFF CACHE BOOL "" FORCE)
 set(SDL_DIALOG OFF CACHE BOOL "" FORCE)
 set(SDL_INSTALL OFF CACHE BOOL "" FORCE)
+# on Linux pads need no video (evdev, udev or inotify), and SDL's X11 and Wayland parts would want their development
+# packages on the build machine (the CI runner has no Xcursor's): left out there
+if(UNIX AND NOT APPLE)
+    set(SDL_VIDEO OFF CACHE BOOL "" FORCE)
+    set(SDL_UNIX_CONSOLE_BUILD ON CACHE BOOL "" FORCE)  # SDL's own switch for a build without X11 or Wayland
+endif()
 FetchContent_Declare(SDL3
     GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
     GIT_TAG release-3.4.18
