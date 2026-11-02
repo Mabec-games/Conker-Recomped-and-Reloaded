@@ -459,6 +459,8 @@ QWidget* MainWindow::BuildAudio() {
     }
     v->addWidget(Group(tr("Sound"), &f));
     Percent(f, tr("Volume"), "volume", 0, 100, 100);
+    Percent(f, tr("Cutscene volume"), "cutscene_volume", 0, 12, 0, tr(" dB"))->setPrefix("+");
+    Hint(f, tr("Cutscenes play quieter than the rest of the game: this raises them while one plays."));
     audioDevice_ = new QComboBox;
     audioDevice_->addItem(tr("System default"), QString());
     f->addRow(tr("Output device"), audioDevice_);
@@ -946,10 +948,12 @@ QWidget* MainWindow::BuildDecensor() {
     auto* v = new QVBoxLayout(box);
     decensorUse_ = new QCheckBox(tr("Use the decensor mod"));
     v->addWidget(decensorUse_);
-    v->addWidget(HintLabel(tr("Uncensored single-player subtitles (English, French, Italian, Spanish) and unbleeped "
-                              "audio for several cutscenes, from github.com/%1. The launcher downloads its latest "
-                              "release, checks it against the checksum GitHub lists, and takes only the game files "
-                              "from it: the release's scripts are never run.").arg(Decensor::kRepo)));
+    v->addWidget(HintLabel(tr("Uncensored single-player subtitles (English, French, Italian, Spanish), from "
+                              "github.com/%1. Its audio is a work in progress: so far only the Great Mighty Poo song "
+                              "and the Greg, Uga Buga, Spooky and Windy cutscenes are unbleeped, the rest of the "
+                              "speech is still bleeped in the mod itself. The launcher downloads its latest release, "
+                              "checks it against the checksum GitHub lists, and takes only the game files from it: "
+                              "the release's scripts are never run.").arg(Decensor::kRepo)));
     decensorStatus_ = new QLabel;
     decensorStatus_->setWordWrap(true);
     v->addWidget(decensorStatus_);
