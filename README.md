@@ -154,7 +154,8 @@ Everyone in a match needs **the same version** of Conker: Recomped & Reloaded.
 - **Linux:** x86_64 with **glibc 2.34 or newer** (Debian 12, Ubuntu 22.04, Fedora 35, current Arch, Bazzite and
   newer), and FUSE 3 (`fusermount3`), which is standard on current desktops.
 - **Windows:** Windows 10 or 11, 64-bit.
-- **A GPU with Vulkan 1.3**, and about 8 GB free while setting up (about 5 GB afterwards).
+- **A GPU with Vulkan 1.3**, and about 8 GB free while setting up (about 5 GB afterwards). Older Intel integrated
+  graphics (UHD/HD 600 series) don't work: see [Known limitations](#known-limitations).
 - **A controller is recommended** for multiplayer menus (see [Controls](#controls)).
 
 Download from [Releases](https://github.com/Mabec-games/Conker-Recomped-and-Reloaded/releases).
@@ -216,6 +217,13 @@ Rebind any of them in **Controls**, separately for single player and multiplayer
   [live-and-recompiled#2](https://github.com/giacomozama/live-and-recompiled/issues/2)). Tick Graphics → **Game
   logic at 30 (original timing)** for that part: the game runs at the original 30 while 60 or 120 frames a second
   are still shown, and Conker survives the roof.
+- **Older Intel integrated graphics (UHD/HD 600 series, 6th to 10th gen Core, such as UHD 630) don't work on
+  Windows:** the game builds, but closes right away with code -1073741819. Intel's driver for these GPUs crashes on
+  the first frame inside its own code (in dynamic rendering, a Vulkan 1.3 feature it claims to support). It isn't your
+  disc or your install, and the upstream port has the same crash
+  ([#14](https://github.com/Mabec-games/Conker-Recomped-and-Reloaded/issues/14),
+  [live-and-recompiled#8](https://github.com/giacomozama/live-and-recompiled/issues/8)). These GPUs would also be too
+  slow for the game. A dedicated GPU, or newer integrated graphics (Intel Iris Xe or Arc, AMD Radeon), works.
 - **3+ online players:** untested so far (see [Play online](#play-online)).
 - **Windows is new:** the launcher, the bundled compiler and the build kit pass automated tests on Windows, but full
   installs have been played on Linux so far. Reports from Windows players are very welcome.
