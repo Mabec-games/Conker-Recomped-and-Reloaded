@@ -435,6 +435,8 @@ QWidget* MainWindow::BuildEnhancements() {
     Check(f, tr("Rope physics"), "rope_physics", true, tr("Ropes swing realistically when Conker hangs on them."));
     Check(f, tr("Overpowered Frying Pan"), "overpowered_pan", false,
           tr("Conker swings the frying pan instead of the baseball bat, with 10x melee damage."));
+    Check(f, tr("First-person POV mode (LT / Q)"), "fpv_toggle", false,
+          tr("Press LT or Q to toggle between 3rd-person and playable 1st-person POV with full locomotion and attacks."));
     v->addStretch(1);
     return page;
 }
