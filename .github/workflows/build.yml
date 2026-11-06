@@ -19,7 +19,7 @@ on:
 
 env:
   KIT_REPO: Mabec-games/live-and-recompiled
-  KIT_TAG: kit-1.5.1
+  KIT_TAG: kit-1.5.2
   QT_VERSION: '6.8.3'
 
 jobs:

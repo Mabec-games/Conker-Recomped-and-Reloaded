@@ -20,7 +20,7 @@
   <a href="#credits">Credits</a>
 </p>
 
-<p align="center"><b>Version 1.4.1</b> · Linux x86_64 (AppImage) · Windows 10/11 x64 (portable zip) · GPL-3.0</p>
+<p align="center"><b>Version 1.4.2</b> · Linux x86_64 (AppImage) · Windows 10/11 x64 (portable zip) · GPL-3.0</p>
 
 > [!IMPORTANT]
 > This is an unofficial, non-commercial fan project. It is not affiliated with or endorsed by Rare, Microsoft or Xbox
@@ -59,6 +59,8 @@ on your PC, with a modern Vulkan renderer. There's no emulator.
 - Play in **English, French, German, Spanish, Italian or Japanese**: menus and subtitles from the disc. The voices are
   English in every language.
 - **Cutscene volume:** cutscenes play quieter than the rest of the game; raise them by up to 12 dB.
+- **5.1 surround:** Audio → Speakers plays 5.1 on a six-channel output (Automatic picks it when your device is set up
+  for it), with 3D sounds placed front to back. Stereo stays as before.
 
 **Enhancements** (each one can be turned off)
 - Per-pixel lighting on characters and objects.
@@ -66,6 +68,11 @@ on your PC, with a modern Vulkan renderer. There's no emulator.
 - Characters and grass at full detail at every distance, and wind on distant grass.
 - Dynamic water that ripples as things move through it, and a fix for the blur on reflective floors.
 - Rope physics, and **skippable cutscenes**: press LT to skip any cutscene, even ones you haven't seen.
+- **First-person POV mode** (off by default, story mode only): LT or Q switches between the usual camera and a
+  playable first-person view, with full movement, jumping and attacks. Conker's own model is hidden; what he holds
+  (bat, keys) stays in view. Look up and down up to 80°, with its own look speed. Cutscenes keep their camera.
+- **10x damage** (off by default, story mode only): everything Conker hits takes 10x damage, his baseball bat and
+  other melee hits, his guns and explosives.
 
 **Controls**
 - Xbox, PlayStation and Switch controllers, with rumble and adjustable vibration strength.
@@ -207,6 +214,9 @@ A controller works out of the box. On a keyboard, the default keys are:
 | D-pad | 1 2 3 4 | Stick clicks | Left Shift, Left Alt |
 
 Rebind any of them in **Controls**, separately for single player and multiplayer matches.
+
+With **First-person POV mode** on (Enhancements → Gameplay), LT / Q toggles first person in story mode instead of
+the game's look mode; in cutscenes and menus it does what it always did.
 
 ## Known limitations
 
