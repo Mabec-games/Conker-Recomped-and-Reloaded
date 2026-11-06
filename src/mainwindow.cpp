@@ -433,10 +433,19 @@ QWidget* MainWindow::BuildEnhancements() {
     Check(f, tr("Skippable cutscenes"), "skippable_cutscenes", false,
           tr("Press LT to skip any cutscene, even ones you haven't seen."));
     Check(f, tr("Rope physics"), "rope_physics", true, tr("Ropes swing realistically when Conker hangs on them."));
-    Check(f, tr("Overpowered Frying Pan"), "overpowered_pan", false,
-          tr("Conker swings the frying pan instead of the baseball bat, with 10x melee damage."));
+    {
+        // the Overpowered Frying Pan option became this one: a settings file from before keeps its choice
+        auto* c = new QCheckBox(tr("10x damage (all of Conker's attacks)"));
+        f->addRow(c);
+        Hint(f, tr("Everything Conker hits takes 10x damage: the baseball bat, his other melee hits, and his guns and "
+                   "explosives. Story mode only."));
+        binds_.push_back({[=](const Config& cfg) { c->setChecked(cfg.Bool("bat_10x_damage", cfg.Bool("overpowered_pan", false))); },
+                          [=](Config& cfg) { cfg.SetBool("bat_10x_damage", c->isChecked()); }});
+    }
     Check(f, tr("First-person POV mode (LT / Q)"), "fpv_toggle", false,
-          tr("Press LT or Q to toggle between 3rd-person and playable 1st-person POV with full locomotion and attacks."));
+          tr("Press LT or Q to toggle between 3rd-person and playable 1st-person POV with full locomotion and attacks. "
+             "Story mode only: multiplayer and the pub menus keep the normal camera and LT."));
+    Percent(f, tr("First-person look speed"), "fpv_look_speed", 50, 200, 120, tr(" %"));
     v->addStretch(1);
     return page;
 }
