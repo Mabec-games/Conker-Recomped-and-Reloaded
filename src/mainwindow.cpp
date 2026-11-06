@@ -433,6 +433,8 @@ QWidget* MainWindow::BuildEnhancements() {
     Check(f, tr("Skippable cutscenes"), "skippable_cutscenes", false,
           tr("Press LT to skip any cutscene, even ones you haven't seen."));
     Check(f, tr("Rope physics"), "rope_physics", true, tr("Ropes swing realistically when Conker hangs on them."));
+    Check(f, tr("Overpowered Frying Pan"), "overpowered_pan", false,
+          tr("Conker swings the frying pan instead of the baseball bat, with 10x melee damage."));
     v->addStretch(1);
     return page;
 }
@@ -467,6 +469,19 @@ QWidget* MainWindow::BuildAudio() {
     Hint(f, tr("The game follows your system's default output. A device picked in an older version is kept here."));
     binds_.push_back({[this](const Config& c) { SetChoice(audioDevice_, c.Str("audio_device"), "default"); },
                       [this](Config& c) { c.SetStr("audio_device", audioDevice_->currentData().toString()); }});
+    {
+        // the output's channels (live-and-recompiled audio::ChannelsFor): auto takes 5.1 when the device has six
+        auto* speakers = new QComboBox;
+        speakers->addItem(tr("Automatic"), "auto");
+        speakers->addItem(tr("Stereo"), "stereo");
+        speakers->addItem(tr("5.1 surround"), "5.1");
+        f->addRow(tr("Speakers"), speakers);
+        Hint(f, tr("Automatic plays 5.1 when the output device is set up for six or more channels, and stereo "
+                   "otherwise. On 5.1, 3D sounds are placed front to back as well. Headphones: stereo, unless your "
+                   "sound card or software turns 5.1 into virtual surround."));
+        binds_.push_back({[=](const Config& c) { SetChoice(speakers, c.Str("speakers", "auto")); },
+                          [=](Config& c) { c.SetStr("speakers", speakers->currentData().toString()); }});
+    }
     Check(f, tr("Mute when the game is in the background"), "mute_in_background", false);
     v->addStretch(1);
     return page;
@@ -480,7 +495,16 @@ QWidget* MainWindow::BuildControls() {
     v->addWidget(Group(tr("Player"), &f));
     player_ = new QComboBox;
     for (int p = 1; p <= 4; p++) player_->addItem(tr("Player %1").arg(p));
-    f->addRow(tr("Settings for"), player_);
+    auto* playerRow = new QWidget;
+    auto* ph = new QHBoxLayout(playerRow);
+    ph->setContentsMargins(0, 0, 0, 0);
+    ph->addWidget(player_, 1);
+    auto* playerInfo = new QPushButton(tr("ℹ️ 3–4 Players / LAN Info…"));
+    playerInfo->setToolTip(tr("Information on split-screen player limits and 3–4 player LAN play"));
+    connect(playerInfo, &QPushButton::clicked, this, &MainWindow::ShowMultiplayerInfoDialog);
+    ph->addWidget(playerInfo);
+    f->addRow(tr("Settings for"), playerRow);
+    Hint(f, tr("Local split screen supports up to 2 players on one PC. To play with 3–4 players (2v2), use Online Play / LAN. Click the info button above for details."));
     Check(f, tr("Give new controllers to the next free player"), "auto_controllers", true);
     useKeyboard_ = new QCheckBox(tr("Keyboard"));
     useMouse_ = new QCheckBox(tr("Mouse"));
@@ -672,10 +696,13 @@ QWidget* MainWindow::BuildMultiplayer() {
     auto* host = new QPushButton(tr("Host a room"));
     auto* join = new QPushButton(tr("Join a room"));
     auto* local = new QPushButton(tr("This network only"));
-    for (QPushButton* b : {host, join, local}) b->setMinimumHeight(36);
+    auto* guide = new QPushButton(tr("ℹ️ 4+ Players / LAN Guide…"));
+    for (QPushButton* b : {host, join, local, guide}) b->setMinimumHeight(36);
+    connect(guide, &QPushButton::clicked, this, &MainWindow::ShowMultiplayerInfoDialog);
     buttons->addWidget(host);
     buttons->addWidget(join);
     buttons->addWidget(local);
+    buttons->addWidget(guide);
     buttons->addStretch(1);
     bv->addLayout(buttons);
     onlineMode_ = new QLabel;
@@ -1383,6 +1410,38 @@ void MainWindow::Play() {
 }
 
 void MainWindow::SetStatus(const QString& text) { status_->setText(text); }
+
+void MainWindow::ShowMultiplayerInfoDialog() {
+    QMessageBox box(this);
+    box.setWindowTitle(tr("Split-Screen & LAN / Online Multiplayer Info"));
+    box.setIcon(QMessageBox::Information);
+    box.setTextFormat(Qt::RichText);
+    box.setText(tr(
+        "<h3 style='margin-bottom: 6px;'>Split-Screen &amp; LAN / Online Multiplayer</h3>"
+        "<p><b>Important Note on Player Limits:</b><br>"
+        "In <i>Conker: Live &amp; Reloaded</i>, local split-screen on one device supports a "
+        "<b>maximum of 2 players</b> (in Dumbots mode).</p>"
+        "<p>It is actually <b>2v2 on a LAN / Online</b> across separate PCs/instances, not 4-player split-screen on one device. "
+        "The 4 controller profiles in settings exist because the original Xbox hardware had 4 controller ports, "
+        "but the game engine natively caps local couch play to 2 players.</p>"
+        "<hr>"
+        "<h3 style='margin-bottom: 6px;'>How to Play With 4+ Players (Online Play / LAN)</h3>"
+        "<p>If you have 3 or 4 players wanting to play together, you must use <b>Online Play</b> "
+        "(the re-engineered System Link network play) across separate PCs/instances:</p>"
+        "<ol style='margin-left: -15px; line-height: 1.5;'>"
+        "<li>In the launcher, go to the <b>Multiplayer</b> tab.</li>"
+        "<li>One PC clicks <b>Host a room</b> (generating a 6-word room code, or click <b>This network only</b> if everyone is on the same local network).</li>"
+        "<li>Other players click <b>Join a room</b> and enter the code.</li>"
+        "<li>Launch the game and go to <b>Multiplayer &rarr; Online Play</b> in-game:"
+        "<ul>"
+        "<li>Host chooses <b>Host</b>.</li>"
+        "<li>Other players choose <b>Play</b>.</li>"
+        "</ul></li>"
+        "</ol>"
+    ));
+    box.setStandardButtons(QMessageBox::Ok);
+    box.exec();
+}
 
 // the banner gives way in a short window (a Steam Deck, a bigger launcher size): the settings and Play keep ~560 px
 void MainWindow::FitBanner(int windowHeight) { banner_->setFixedHeight(std::clamp(windowHeight - 560, 56, 300)); }

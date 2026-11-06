@@ -76,6 +76,7 @@ private:
     void SetModEnabled(const QString& name, bool on);
     void RefreshGameStatus();
     void SetStatus(const QString& text);
+    void ShowMultiplayerInfoDialog();
 
     Config config_;
     std::vector<Bind> binds_;
