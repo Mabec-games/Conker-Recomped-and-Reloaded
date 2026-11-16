@@ -17,6 +17,7 @@ ship with it.
 | Xbox XBE Recomp, the recompiler and runtime Live & Recompiled is built on | **TGP482**, with Joshhhuaaa | MIT | https://github.com/TGP482/XboxXBERecomp |
 | xemu and Cxbx-Reloaded, references for the Xbox's hardware and APIs | their teams | GPL-2.0 | https://xemu.app · https://github.com/Cxbx-Reloaded/Cxbx-Reloaded |
 | ConkerXbox60FPSWidescreen patch, information about the game's code | its author | — | https://www.moddb.com/downloads/conkerxbox60fpswidescreen |
+| Conker: Live & Recompiled, the fixes for black cutscenes and the barn roof at 60 FPS | **cdetv** | MIT | https://github.com/cdetv/conker-live-recompiled |
 | SMAA | Jorge Jimenez, Jose I. Echevarria, Belen Masia, Fernando Navarro, Diego Gutierrez | MIT | http://www.iryoku.com/smaa/ |
 | SDL 3, Dear ImGui, Vulkan-Headers, volk, Vulkan Memory Allocator, glslang, Zydis, toml++, miniz, FLTK, Roboto | their authors | zlib, MIT, Apache-2.0, BSD, LGPL with static-linking exception | listed with full texts in `THIRD_PARTY.txt` (from the port) |
 

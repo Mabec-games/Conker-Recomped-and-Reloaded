@@ -222,11 +222,6 @@ the game's look mode; in cutscenes and menus it does what it always did.
 
 - **Keyboard in multiplayer menus:** some screens (class or team selection) don't respond to mouse clicks, and the
   on-screen hints show controller buttons. Use Space for A and E for B, or a controller.
-- **Instant death on the barn roof (Barn Boys) with 60 fps game logic:** a known upstream bug
-  ([#1](https://github.com/Mabec-games/Conker-Recomped-and-Reloaded/issues/1),
-  [live-and-recompiled#2](https://github.com/giacomozama/live-and-recompiled/issues/2)). Tick Graphics → **Game
-  logic at 30 (original timing)** for that part: the game runs at the original 30 while 60 or 120 frames a second
-  are still shown, and Conker survives the roof.
 - **Older Intel integrated graphics (UHD/HD 600 series, 6th to 10th gen Core, such as UHD 630) don't work on
   Windows:** the game builds, but closes right away with code -1073741819. Intel's driver for these GPUs crashes on
   the first frame inside its own code (in dynamic rendering, a Vulkan 1.3 feature it claims to support). It isn't your
@@ -299,6 +294,7 @@ This rests on the work of many people. Thank you all.
 | **Decensor mod** | **nastys** (Italian, French), **Vaani** (English), **Theconker64** (Spanish): [nastys/conker-live-and-reloaded-decensor](https://github.com/nastys/conker-live-and-reloaded-decensor) |
 | References for the Xbox hardware | [xemu](https://xemu.app) and [Cxbx-Reloaded](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded) |
 | Information about the game's code | the [ConkerXbox60FPSWidescreen patch](https://www.moddb.com/downloads/conkerxbox60fpswidescreen) |
+| Fixes for black cutscenes and the barn roof at 60 FPS | **cdetv**: [cdetv/conker-live-recompiled](https://github.com/cdetv/conker-live-recompiled) |
 | Launcher, online rooms, AppImage, artwork | **Mabec Games** |
 | *Conker: Live & Reloaded* | Rare / Microsoft Game Studios |
 
