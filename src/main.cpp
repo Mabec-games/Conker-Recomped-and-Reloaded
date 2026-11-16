@@ -8,6 +8,7 @@
 #include "gamepad.h"
 #include "install.h"
 #include "mainwindow.h"
+#include "version.h"
 
 #ifdef Q_OS_WIN
 #include <windows.h>
@@ -53,6 +54,7 @@ int main(int argc, char** argv) {
     QApplication app(argc, argv);
     // preferences go to launcher.ini beside the launcher (install::IniFile), nothing in ~/.config or the registry
     QApplication::setApplicationName("ConkerLauncher");
+    QApplication::setApplicationVersion(version::kLauncher);
     QApplication::setDesktopFileName("conker-recomped-and-reloaded");
     MainWindow w;
     Gamepad gamepad;  // controller navigation, for a Steam Deck in Game Mode

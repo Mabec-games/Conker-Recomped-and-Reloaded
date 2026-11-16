@@ -1,10 +1,52 @@
 cmake_minimum_required(VERSION 3.25)
-project(ConkerLauncher VERSION 1.2.0 LANGUAGES C CXX)
+project(ConkerLauncher VERSION 1.4.2 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
+
+# The build shown in the launcher (Settings -> About and credits). The release tag CI builds from (its checkout has no
+# tags), else git describe here (v1.4.2, or v1.4.2-3-gabc1234-dirty between releases), else the project's version;
+# -DCONKER_VERSION=... sets it. The game kit is the KIT_TAG the release workflow builds the game from.
+set(CONKER_VERSION "" CACHE STRING "Launcher version to show (empty: from the release tag or git)")
+set(CONKER_BUILD_VERSION "${CONKER_VERSION}")
+if(NOT CONKER_BUILD_VERSION AND "$ENV{GITHUB_REF_TYPE}" STREQUAL "tag")
+    set(CONKER_BUILD_VERSION "$ENV{GITHUB_REF_NAME}")
+endif()
+if(NOT CONKER_BUILD_VERSION)
+    find_package(Git QUIET)
+    if(GIT_FOUND)
+        execute_process(COMMAND "${GIT_EXECUTABLE}" describe --tags --match "v*" --dirty
+            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" OUTPUT_VARIABLE CONKER_BUILD_VERSION
+            OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+        if(NOT CONKER_BUILD_VERSION)
+            execute_process(COMMAND "${GIT_EXECUTABLE}" rev-parse --short HEAD
+                WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" OUTPUT_VARIABLE _sha
+                OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+            if(_sha)
+                set(CONKER_BUILD_VERSION "v${PROJECT_VERSION}-g${_sha}")
+            endif()
+        endif()
+    endif()
+endif()
+if(NOT CONKER_BUILD_VERSION)
+    set(CONKER_BUILD_VERSION "v${PROJECT_VERSION}")
+endif()
+string(REGEX REPLACE "^v" "" CONKER_BUILD_VERSION "${CONKER_BUILD_VERSION}")
+set(CONKER_KIT_TAG "")
+file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/.github/workflows/build.yml" _kit REGEX "^[ ]*KIT_TAG:")
+if(_kit)
+    string(REGEX REPLACE "^[ ]*KIT_TAG:[ ]*['\"]?([^'\" ]+).*" "\\1" CONKER_KIT_TAG "${_kit}")
+endif()
+# configure again when a commit or tag moves, so a local build's version follows the checkout
+foreach(_f .git/HEAD .git/index .git/packed-refs .github/workflows/build.yml)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${_f}")
+        set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${_f}")
+    endif()
+endforeach()
+message(STATUS "Launcher version ${CONKER_BUILD_VERSION}, game kit ${CONKER_KIT_TAG}")
+configure_file(src/version.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/version.h" @ONLY)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Network)
 find_package(LibArchive REQUIRED)  # unpacks the decensor release (.7z)
@@ -68,6 +110,7 @@ qt_add_executable(ConkerLauncher WIN32
     resources/resources.qrc
 )
 
+target_include_directories(ConkerLauncher PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(ConkerLauncher PRIVATE Qt6::Widgets Qt6::Network LibArchive::LibArchive tomlplusplus::tomlplusplus
     libminiupnpc-static SDL3::SDL3-static)
 

@@ -39,6 +39,8 @@
 #include <QTextBrowser>
 #include <QTimer>
 #include <QUrl>
+
+#include "version.h"
 #include <QVBoxLayout>
 
 #include "install.h"
@@ -1177,6 +1179,12 @@ QWidget* MainWindow::BuildLauncher() {
     // who made what this rests on
     auto* about = new QGroupBox(tr("About and credits"));
     auto* av = new QVBoxLayout(about);
+    // the build: the launcher's version and the game kit it builds the game from, selectable for bug reports
+    auto* build = new QLabel(QString(version::kKit[0] ? tr("<b>Version %1</b> · game kit %2") : tr("<b>Version %1</b>"))
+                                 .arg(QString::fromUtf8(version::kLauncher).toHtmlEscaped(),
+                                      QString::fromUtf8(version::kKit).toHtmlEscaped()));
+    build->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    av->addWidget(build);
     auto* credits = new QTextBrowser;
     credits->setOpenExternalLinks(true);
     QFile html(":/credits.html");
